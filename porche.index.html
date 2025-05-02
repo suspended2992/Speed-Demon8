@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SPEED DEMON</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to bottom right, #a8dadc, #457b9d); /* More engaging background */
+      font-family: 'Arial', sans-serif; /* Specify a common sans-serif font */
+      color: #333;
+    }
+    canvas { display: block; }
+
+    /* General style for UI panels */
+    .ui-panel {
+      position: absolute;
+      padding: 15px 20px; /* Increased padding */
+      background: rgba(255, 255, 255, 0.95); /* Slightly more opaque */
+      border-radius: 12px; /* More rounded corners */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add subtle shadow */
+      font-size: 22px; /* Slightly smaller font for scoreboard */
+      font-weight: bold;
+      color: #333;
+      z-index: 2;
+      backdrop-filter: blur(3px); /* Add a subtle blur effect */
+    }
+
+    #scoreboard {
+      top: 20px; /* Adjusted position */
+      left: 15px; /* Adjusted position */
+      font-size: 25px;
+    }
+
+    .control-btn {
+      width: 150px; /* Slightly smaller touch controls */
+      height: 150px;
+      font-size: 70px; /* Adjusted font size */
+      border-radius: 25%; /* Circular buttons */
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      position: absolute;
+      bottom: 50px; /* Adjusted position */
+      z-index: 2;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: background 0.2s ease, transform 0.1s ease; /* Add transitions */
+      display: flex; /* Use flexbox for centering */
+      justify-content: center;
+      align-items: center;
+    }
+    #left-btn { left: 50px; } /* Adjusted position */
+    #right-btn { right: 50px; } /* Adjusted position */
+    .control-btn:active {
+      background: rgba(200, 200, 200, 1); /* Darker on press */
+      transform: scale(0.95); /* Slight scale down on press */
+    }
+     .control-btn:hover {
+         background: rgba(255, 255, 255, 1); /* Slightly brighter on hover */
+     }
+
+
+    /* Style for Pause and Reset buttons */
+    #resetBtn, #pauseBtn {
+      position: absolute;
+      top: 15px;
+      padding: 10px 20px; /* Smaller padding */
+      font-size: 18px; /* Smaller font size */
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px; /* Slightly less rounded */
+      font-family: sans-serif;
+      z-index: 2;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: background 0.2s ease, transform 0.1s ease;
+      border: none;
+    }
+    #resetBtn:hover, #pauseBtn:hover { background: rgba(255, 255, 255, 1); }
+    #resetBtn:active, #pauseBtn:active { transform: scale(0.95); }
+
+    #resetBtn { right: 15px; }
+    #pauseBtn {
+        left: 70%;
+        transform: translateX(-50%); /* Keep centered */
+    }
+
+
+    #milestone {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 40px; /* Adjusted size */
+      font-weight: bold;
+      color: #ff9800; /* Orange color */
+      background: rgba(255,255,255,0.9); /* More opaque */
+      padding: 25px 40px; /* Increased padding */
+      border-radius: 15px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* More prominent shadow */
+      display: none;
+      z-index: 3;
+      text-align: center;
+    }
+
+    #gameOverScreen {
+      position: absolute;
+      top: 0; /* Take full screen */
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7); /* Darker overlay */
+      z-index: 4;
+      display: flex; /* Use flexbox for centering */
+      justify-content: center;
+      align-items: center;
+      visibility: hidden; /* Use visibility to allow transition */
+      opacity: 0;
+      transition: visibility 0s ease-in-out 0.5s, opacity 0.5s ease-in-out; /* Transition with delay */
+    }
+    #gameOverScreen.visible {
+        visibility: visible;
+        opacity: 1;
+        transition-delay: 0s;
+    }
+
+
+    .game-over-content {
+      background: rgba(255,255,255,0.95);
+      padding: 40px 60px; /* More padding */
+      border-radius: 20px;
+      text-align: center;
+      font-family: sans-serif;
+      color: #d32f2f; /* Red color */
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+      transform: scale(0.8); /* Start slightly smaller */
+      transition: transform 0.5s ease-in-out;
+    }
+    #gameOverScreen.visible .game-over-content {
+        transform: scale(1); /* Scale up when visible */
+    }
+
+
+    #gameOverText {
+        font-size: 40px; /* Larger game over text */
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    #restartBtn {
+      margin-top: 20px;
+      padding: 12px 35px; /* Adjusted padding */
+      font-size: 50px; /* Adjusted font size */
+      background: #4caf50; /* Green color */
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+    #restartBtn:hover { background: #388e3c; } /* Darker green on hover */
+    #restartBtn:active { transform: scale(0.97); }
+
+
+    #countdown {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 70px; /* Larger countdown */
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.7); /* Darker background */
+      color: white;
+      padding: 30px 50px; /* More padding */
+      border-radius: 20px;
+      display: none;
+      z-index: 5;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    #startMenu {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('https://www.dropbox.com/scl/fi/n3mrq5x3ykiuy1db5aidb/Porsche-F1-Car.jpeg?rlkey=zgopv00o756zdu0istlygsyte&st=oc7rbj3i&raw=1') no-repeat center center fixed; /* Example background image */
+      background-size: cover;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column; /* Align items vertically */
+    }
+
+    .start-content {
+      text-align: center;
+      font-family: sans-serif;
+      background: rgba(255, 255, 255, 0.85); /* Slightly transparent background */
+      padding: 40px 60px;
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .creator {
+      font-size: 24px; /* Adjusted size */
+      margin-bottom: 25px;
+      color: #555;
+    }
+    .creator span { color: #e53935; /* Darker red */ font-weight: bold; }
+
+    #startBtn {
+      font-size: 28px; /* Larger start button */
+      padding: 18px 50px; /* More padding */
+      background: #fbc02d; /* Yellow-orange color */
+      color: #333; /* Dark text */
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: background 0.2s ease, transform 0.1s ease;
+      font-weight: bold;
+    }
+     #startBtn:hover { background: #f9a825; } /* Darker yellow on hover */
+     #startBtn:active { transform: scale(0.98); }
+
+  </style>
+</head>
+<body>
+  <div id="startMenu">
+    <div class="start-content">
+      <div class="creator">A game by <span style="color: red;">Abhinav</span></div>
+      <h1>SPEED DEMON</h1>
+      <button id="startBtn">Start Game</button>
+    </div>
+  </div>
+
+  <div id="scoreboard" class="ui-panel">Score: 0 | High Score: 0 | Lives: 3</div>
+  <button id="resetBtn" onclick="resetGame()">Reset</button>
+  <button id="pauseBtn" onclick="pauseGame()">Pause</button>
+  <div id="milestone">Milestone!</div>
+  <div id="gameOverScreen">
+    <div class="game-over-content">
+      <div id="gameOverText">Game Over!</div>
+      <button id="restartBtn" onclick="resetGame()">Restart</button>
+    </div>
+  </div>
+  <div id="countdown"></div>
+  <button id="left-btn" class="control-btn">←</button>
+  <button id="right-btn" class="control-btn">→</button>
+
+  <audio id="pauseSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+  <audio id="crashSound" src="https://actions.google.com/sounds/v1/impacts/crash.ogg" preload="auto"></audio>
+  <audio id="passSound" src="https://actions.google.com/sounds/v1/transportation/car_pass_by.ogg" preload="auto"></audio>
+
+  <audio id="bgMusic" src="https://www.dropbox.com/scl/fi/o0ie564eio4dt4lidc407/trap-beat-sport-racing-workout-background-music-intro-theme-309985.mp3?rlkey=7kdq210l6gc19q9bbj3pjaqps&st=xh1riy7h&raw=1" loop preload="auto"></audio>
+  <audio id="laneChangeSound" src="YOUR_LANE_CHANGE_SFX_URL.mp3" preload="auto"></audio>
+  <audio id="gameStartSound" src="YOUR_GAME_START_SFX_URL.mp3" preload="auto"></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js"></script>
+  <script>
+    // --- Game Objects ---
+    let scene, camera, renderer, car, light; // car will now hold the loaded 3D model
+    let clock = new THREE.Clock();
+
+    // --- Game State ---
+    let score = 0, highScore = localStorage.getItem("highScore") || 0;
+    let lives = 3;
+    let gameRunning = false;
+    let paused = false;
+    let gameStarted = false;
+    let baseSpeed = 0.2;
+    let isInvulnerable = false;
+    let invulnerabilityTimer = 0;
+    const INVULNERABILITY_DURATION = 1.0;
+
+    // --- Car Movement Refinement ---
+    const lanePositions = [-2.5, -1.0, 0, 1.0, 2.5]; // X positions for each lane (car center)
+    let currentLaneIndex = 2; // Start in the middle lane (index 2 corresponds to X=0)
+    let targetLaneIndex = 2; // Used for button/keyboard control
+    const laneChangeSpeed = 15; // Speed of movement between lanes (for button/keyboard)
+    const tiltSpeed = 25; // Speed of movement with tilt (can be same or different) // NOTE: Tilt control code is currently removed
+    const maxTilt = 0.2; // Max tilt angle in radians (approx 11.5 degrees)
+    const tiltRotationSpeed = 10; // How fast the car tilts/untilt based on movement // NOTE: Tilt control code is currently removed
+
+    // Variables to track button/key press state for continuous movement (for button/keyboard)
+    let moveLeftPressed = false;
+    let moveRightPressed = false;
+    const laneChangeHoldDelay = 0.2; // Delay before continuous lane change starts (seconds)
+    const laneChangeInterval = 0.15; // Time between lane changes when held (seconds)
+    let lastLaneChangeTime = 0; // To track time for continuous movement
+    let previousTargetLaneIndex = 2; // To detect when lane changes (for button/keyboard)
+
+    // --- Model Loading Variable ---
+    const carModelUrl = 'https://www.dropbox.com/scl/fi/7cz6tar7pax53ysymtnis/2022_porche_911_gt3_rsr.glb?rlkey=3j1eqz7uocgqfpyczh4wwnndx&st=wvwvrdkb&raw=1'; // <-- REPLACE WITH YOUR DIRECT DROPBOX .glb URL
+
+
+    // --- World Elements ---
+    const obstacles = [];
+    const stripes = [];
+    const boats = [];
+    const roadSegments = [];
+    const seaSegmentsLeft = [];
+    const seaSegmentsRight = [];
+
+    const minGap = 25;
+    const initialObstacleCount = 4; // Reduced for potential performance improvement
+    const numStripes = 20;
+    const stripeSpacing = 10;
+    const totalStripeLength = numStripes * stripeSpacing;
+    const numBoatsPerSide = 4; // Reduced for potential performance improvement
+    const boatSpacing = 40;
+    const totalBoatZoneLength = numBoatsPerSide * boatSpacing * 2;
+
+    // --- Tiling Constants ---
+    const segmentLength = 200;
+    const numSegments = 4;
+    const roadWidth = 6; // Road extends from -3 to +3 on X axis
+    const seaWidth = 100;
+
+
+    // --- Reusable Objects ---
+    const carBox = new THREE.Box3();
+    const obsBox = new THREE.Box3();
+
+    // --- Sound Elements ---
+    let pauseSound, crashSound, passSound;
+    // New Sound Elements
+    let bgMusic, laneChangeSound, gameStartSound;
+
+    // --- UI Elements ---
+    let startMenu, startContent; // Add other UI element variables as needed
+
+
+    function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xbfd1e5);
+      scene.fog = new THREE.Fog(0xbfd1e5, segmentLength / 4, segmentLength * (numSegments / 2));
+
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, segmentLength * numSegments);
+      camera.position.set(0, 5, 10);
+      camera.lookAt(0, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFShadowMap;
+      document.body.appendChild(renderer.domElement);
+
+      light = new THREE.DirectionalLight(0xffffff, 1.5);
+      light.position.set(10, 20, 20);
+      light.castShadow = true;
+      light.shadow.mapSize.width = 1024;
+      light.shadow.mapSize.height = 1024;
+      light.shadow.camera.near = 1;
+      light.shadow.camera.far = segmentLength;
+      light.shadow.camera.left = -10;
+      light.shadow.camera.right = 10;
+      light.shadow.camera.top = 10;
+      light.shadow.camera.bottom = -10;
+      scene.add(light);
+      scene.add(light.target);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+
+      // --- Road Segments ---
+      const roadGeo = new THREE.PlaneGeometry(roadWidth, segmentLength, 1, 1);
+      const roadMat = new THREE.MeshStandardMaterial({ color: 0x333333 }); // Keep solid color for now, add texture later
+      for (let i = 0; i < numSegments; i++) {
+          const segment = new THREE.Mesh(roadGeo, roadMat);
+          segment.rotation.x = -Math.PI / 2;
+          segment.position.z = 5 - (segmentLength / 2) - (i * segmentLength);
+          segment.receiveShadow = true;
+          segment.castShadow = false;
+          scene.add(segment);
+          roadSegments.push(segment);
+      }
+
+      // --- Sea Segments ---
+      const seaGeo = new THREE.PlaneGeometry(seaWidth, segmentLength, 1, 1);
+      const seaMat = new THREE.MeshStandardMaterial({ color: 0x1e90ff, roughness: 0.3, metalness: 0.1 }); // Keep solid color for now, add texture later
+      for (let i = 0; i < numSegments; i++) {
+          const segmentLeft = new THREE.Mesh(seaGeo, seaMat);
+          segmentLeft.rotation.x = -Math.PI / 2;
+          segmentLeft.position.x = -(seaWidth / 2 + roadWidth / 2);
+          segmentLeft.position.y = -0.1;
+          segmentLeft.position.z = 5 - (segmentLength / 2) - (i * segmentLength);
+          segmentLeft.castShadow = false;
+          segmentLeft.receiveShadow = false;
+          scene.add(segmentLeft);
+          seaSegmentsLeft.push(segmentLeft);
+
+          const segmentRight = new THREE.Mesh(seaGeo, seaMat);
+          segmentRight.rotation.x = -Math.PI / 2;
+          segmentRight.position.x = (seaWidth / 2 + roadWidth / 2);
+          segmentRight.position.y = -0.1;
+          segmentRight.position.z = 5 - (segmentLength / 2) - (i * segmentLength);
+          segmentRight.castShadow = false;
+          segmentRight.receiveShadow = false;
+          scene.add(segmentRight);
+          seaSegmentsRight.push(segmentRight);
+      }
+
+      // --- Stripes, Boats, Obstacles ---
+      const stripeGeo = new THREE.BoxGeometry(0.3, 0.05, 4);
+      const stripeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+      for (let i = 0; i < numStripes; i++) {
+        const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+        stripe.position.set(0, 0.05, -i * stripeSpacing);
+        stripe.castShadow = false; stripe.receiveShadow = true;
+        scene.add(stripe); stripes.push(stripe);
+      }
+
+      // Load the 3D Car Model
+      const loader = new THREE.GLTFLoader();
+      loader.load(carModelUrl, function (gltf) {
+          car = gltf.scene; // The loaded model becomes the car object
+          scene.add(car);
+
+          // --- Adjust Model Scale, Position, and Rotation ---
+          // These values will depend heavily on your specific model.
+          // You will likely need to experiment to get these right.
+          // Start with a small scale like 0.1 or 0.5 and adjust.
+          car.scale.set(0.5, 0.5, 0.5); // <-- Adjust scale as needed
+          // Position the center of the car at the lane position and slightly above the road
+          car.position.set(lanePositions[currentLaneIndex], 0.5, 5); // <-- Adjust Y position if model's base is not at Y=0
+          // Models are often oriented differently. You might need to rotate it to face forward (+Z).
+          // Common adjustments: Math.PI (180 degrees) or -Math.PI / 2 (-90 degrees) etc.
+          car.rotation.y = Math.PI; // <-- Adjust rotation if the model is facing the wrong way
+          car.rotation.order = 'YXZ'; // Keep this order for correct lateral tilt rotation (Z axis)
+
+          car.castShadow = true;
+          // Traverse the model to ensure all meshes cast shadows and handle initial material settings
+          car.traverse((node) => {
+              if (node.isMesh) {
+                  node.castShadow = true;
+                  // Ensure loaded materials are visible and handle transparency if needed
+                   if (node.material) {
+                       // Clone the material if you need to modify properties like opacity without affecting other instances
+                       // node.material = node.material.clone(); // Might be needed depending on your model and desired effects
+                       node.material.transparent = false; // Start not transparent
+                       node.material.opacity = 1.0;
+                       // GLB models often have complex materials.
+                       // If you need to change color, it's more complex than with a simple material.
+                   }
+              }
+          });
+
+          console.log("Car model loaded successfully!");
+
+          // Obstacles can only be placed relative to the car's Z position once the car is loaded
+           for (let i = 0; i < initialObstacleCount; i++) {
+             addObstacle(car.position.z - 40 - i * minGap);
+           }
+
+      }, undefined, function (error) {
+          console.error('An error occurred while loading the car model:', error);
+          // Add a fallback box car if loading fails so the game is still playable
+          const carBodyMat = new THREE.MeshPhongMaterial({ color: 0x00cc00, specular: 0x111111, shininess: 50 });
+          const carBodyGeo = new THREE.BoxGeometry(1, 0.6, 2);
+          car = new THREE.Mesh(carBodyGeo, carBodyMat);
+          car.position.set(lanePositions[currentLaneIndex], 0.5, 5);
+          car.castShadow = true;
+          scene.add(car);
+           console.log("Added fallback box car.");
+
+           // Obstacles can only be placed relative to the car's Z position after the fallback is added
+            for (let i = 0; i < initialObstacleCount; i++) {
+              addObstacle(car.position.z - 40 - i * minGap);
+            }
+      });
+
+       // --- NOTE: The old code for creating the box car and wheels is now handled in the loader callback or removed ---
+
+
+      function createBoat(x, z) {
+        const boat = new THREE.Group();
+        const baseGeo = new THREE.BoxGeometry(1.5, 0.3, 4.0);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.7 }); // Keep solid color for now, add texture later
+        const base = new THREE.Mesh(baseGeo, baseMat);
+        base.position.y = 0.15; base.castShadow = true; base.receiveShadow = false; boat.add(base);
+        const cabinGeo = new THREE.BoxGeometry(0.8, 0.6, 1.0);
+        const cabinMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }); // Keep solid color for now, add texture later
+        const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+        cabin.position.set(0, 0.60, -0.5); cabin.castShadow = true; cabin.receiveShadow = false; boat.add(cabin);
+        boat.position.set(x, 0, z); scene.add(boat); boats.push(boat); return boat;
+      }
+      for (let i = 0; i < numBoatsPerSide; i++) {
+        const zPos = -i * boatSpacing - 20;
+        createBoat(-(roadWidth / 2 + 3 + Math.random() * 4), zPos);
+        createBoat( (roadWidth / 2 + 3 + Math.random() * 4), zPos);
+      }
+      // Removed initial obstacle creation here, moved into the loader callback
+
+
+      // --- Get UI Elements ---
+      startMenu = document.getElementById('startMenu');
+      startContent = startMenu.querySelector('.start-content');
+      // Add references to settings UI elements here if you add that feature back
+      // settingsBtn = document.getElementById('settingsBtn');
+      // settingsPanel = document.getElementById('settingsPanel');
+      // saveSettingsBtn = document.getElementById('saveSettingsBtn');
+      // closeSettingsBtn = document.getElementById('closeSettingsBtn');
+      // controlMethodRadios = document.getElementsByName('controlMethod');
+      // tiltOptionLabel = document.getElementById('tiltOptionLabel');
+
+
+      // --- Sound Elements ---
+      pauseSound = document.getElementById('pauseSound');
+      crashSound = document.getElementById('crashSound');
+      passSound = document.getElementById('passSound');
+      // Get references to new audio elements
+      bgMusic = document.getElementById('bgMusic');
+      laneChangeSound = document.getElementById('laneChangeSound');
+      gameStartSound = document.getElementById('gameStartSound');
+
+      // Optional: Set volume for sounds
+      // bgMusic.volume = 0.5;
+      // laneChangeSound.volume = 0.8;
+      // crashSound.volume = 1.0;
+      // passSound.volume = 0.7;
+      // gameStartSound.volume = 0.9;
+
+      // --- Event Listeners ---
+
+      // Touch/Pointer controls
+      document.getElementById("left-btn").addEventListener("pointerdown", () => {
+          // Assuming buttons/keyboard is the default control without settings menu
+          if (!paused && gameRunning) {
+              moveLeftPressed = true;
+              lastLaneChangeTime = clock.getElapsedTime(); // Reset timer on initial press
+          }
+      });
+      document.getElementById("left-btn").addEventListener("pointerup", () => { moveLeftPressed = false; });
+      document.getElementById("left-btn").addEventListener("pointerleave", () => { moveLeftPressed = false; });
+
+      document.getElementById("right-btn").addEventListener("pointerdown", () => {
+          // Assuming buttons/keyboard is the default control without settings menu
+          if (!paused && gameRunning) {
+              moveRightPressed = true;
+              lastLaneChangeTime = clock.getElapsedTime(); // Reset timer on initial press
+          }
+      });
+      document.getElementById("right-btn").addEventListener("pointerup", () => { moveRightPressed = false; });
+      document.getElementById("right-btn").addEventListener("pointerleave", () => { moveRightPressed = false; });
+
+      // Keyboard controls
+      window.addEventListener('keydown', (e) => {
+          // Assuming buttons/keyboard is the default control without settings menu
+         if (!paused && gameRunning) {
+             if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+                 if (!moveLeftPressed) { // Only register press if not already pressed
+                     moveLeftPressed = true;
+                     lastLaneChangeTime = clock.getElapsedTime(); // Reset timer on initial press
+                 }
+             }
+             if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+                 if (!moveRightPressed) { // Only register press if not already pressed
+                     moveRightPressed = true;
+                     lastLaneChangeTime = clock.getElapsedTime(); // Reset timer on initial press
+                 }
+             }
+         }
+         if (gameStarted) {
+             if (e.key.toLowerCase() === 'p') pauseGame();
+             if (e.key === 'Escape' && paused) pauseGame();
+         }
+     });
+
+     window.addEventListener('keyup', (e) => {
+         if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') { moveLeftPressed = false; }
+         if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') { moveRightPressed = false; }
+     });
+
+
+      window.addEventListener("resize", onWindowResize);
+
+      // Settings button event listeners are removed as the settings UI was removed in the provided code snippet.
+      // If you want the settings menu back, you need to re-add its HTML and the related JS logic.
+
+    }
+
+    // Helper function to map a value from one range to another
+    // This function was part of the tilt control logic, which seems to be removed
+    // in the provided code snippet. Re-add tilt control logic if needed.
+    // function mapRange(value, inMin, inMax, outMin, outMax) {
+    //   return ((value - inMin) * (outMax - outOut)) / (inMax - inMin) + outMin;
+    // }
+
+
+    function addObstacle(zPos) {
+       const isCone = Math.random() > 0.5;
+       const geometry = isCone ? new THREE.CylinderGeometry(0, 0.6, 1.2, 12) : new THREE.BoxGeometry(1, 1, 1);
+       const color = Math.random() > 0.5 ? 0xff0000 : 0xffed00;
+       const material = new THREE.MeshPhongMaterial({ color: color, specular: 0x050505, shininess: 30 }); // Keep solid color for now, add texture later
+       const obstacle = new THREE.Mesh(geometry, material);
+       const yPos = isCone ? 0.6 : 0.5;
+       obstacle.position.set(lanePositions[Math.floor(Math.random() * lanePositions.length)], yPos, zPos);
+       obstacle.castShadow = true; obstacle.receiveShadow = true;
+       scene.add(obstacle); obstacles.push(obstacle);
+    }
+
+    let lastScore = -1; let lastLives = -1; let lastHighScore = -1;
+    function updateScoreIfNeeded() {
+       if (highScore !== lastHighScore) { lastHighScore = highScore; lastScore = -1; }
+       if (score !== lastScore || lives !== lastLives) {
+           const hearts = '❤️'.repeat(lives) + '🖤'.repeat(Math.max(0, 3 - lives));
+           document.getElementById("scoreboard").innerHTML = `Score: ${score} | High Score: ${highScore} | Lives: ${hearts}`;
+           lastScore = score; lastLives = lives;
+       }
+    }
+
+    // =========================================================================
+    // === ANIMATE FUNCTION (WITH CONTINUOUS MOVEMENT, TILE MANAGEMENT, TRY/CATCH) ===
+    // =========================================================================
+    function animate() {
+         // Only proceed if the renderer is available
+        if (!renderer) {
+             requestAnimationFrame(animate);
+             return;
+        }
+
+        if (!gameRunning) {
+             // Only render if the car is loaded, otherwise the scene might be empty
+             if (car) {
+                  renderer.render(scene, camera);
+             }
+             requestAnimationFrame(animate);
+             return;
+        }
+
+        requestAnimationFrame(animate);
+        if (paused) {
+             // Only render if the car is loaded while paused
+             if (car) {
+                 renderer.render(scene, camera);
+             }
+             return;
+        }
+
+        const deltaTime = clock.getDelta();
+        const elapsedTime = clock.getElapsedTime(); // Get total elapsed time
+
+        // --- Update Invulnerability ---
+        if (isInvulnerable) {
+             invulnerabilityTimer -= deltaTime;
+             if (invulnerabilityTimer <= 0) {
+                 isInvulnerable = false;
+                 // Reset material opacity/transparency for the loaded model
+                  if (car) { // Check if car model is loaded
+                      car.traverse((node) => {
+                          if (node.isMesh && node.material) {
+                              node.material.opacity = 1.0;
+                              node.material.transparent = false;
+                          }
+                      });
+                  }
+             } else {
+                 const blink = Math.floor(invulnerabilityTimer * 10) % 2 === 0;
+                  if (car) { // Check if car model is loaded
+                      car.traverse((node) => {
+                           if (node.isMesh && node.material) {
+                               // Ensure material can be made transparent
+                                if (node.material.transparent === false) {
+                                    node.material.transparent = true;
+                                }
+                                node.material.opacity = blink ? 1.0 : 0.4;
+                            }
+                      });
+                  }
+             }
+        }
+
+        // --- Calculate Speed & Movement ---
+        let currentSpeed = baseSpeed + Math.floor(score / 100) * 0.05;
+        const deltaZ = -currentSpeed * 70 * deltaTime; // Forward movement based on speed
+        // Only update car position if it has been loaded
+        if (car) {
+            car.position.z += deltaZ;
+        }
+        camera.position.z += deltaZ;
+        light.position.z += deltaZ;
+        light.target.position.z += deltaZ;
+        // Adjust camera lookAt to follow the car's lateral movement
+         if (car) {
+             camera.lookAt(car.position.x, car.position.y - 1, car.position.z - 10);
+         } else {
+              camera.lookAt(0, -1, camera.position.z - 10); // Fallback lookAt if car not loaded
+         }
+
+
+        // --- Car Lateral Movement & Tilt ---
+
+        // Update targetLaneIndex based on held buttons
+        if (moveLeftPressed && targetLaneIndex > 0) {
+            // Check for initial press or continuous hold
+            if (elapsedTime - lastLaneChangeTime > laneChangeHoldDelay) {
+                 // Continuous movement logic
+                if (elapsedTime - lastLaneChangeTime - laneChangeHoldDelay >= laneChangeInterval) {
+                    targetLaneIndex = Math.max(0, targetLaneIndex - 1);
+                    lastLaneChangeTime = elapsedTime - laneChangeHoldDelay; // Reset interval timer
+                     //console.log("Continuous Left: Target Lane:", targetLaneIndex); // Debug
+                }
+            } else if (car && Math.abs(car.position.x - lanePositions[targetLaneIndex]) < 0.1) { // Check if car is loaded
+                 // Initial press before hold delay - move one lane if currently close to target
+                 // Check against current targetLaneIndex because it might have been set by the initial press
+                 targetLaneIndex = Math.max(0, targetLaneIndex - 1);
+                 lastLaneChangeTime = elapsedTime; // Reset timer for hold
+                 //console.log("Initial Left: Target Lane:", targetLaneIndex); // Debug
+            }
+        } else if (moveRightPressed && targetLaneIndex < lanePositions.length - 1) {
+             // Check for initial press or continuous hold
+             if (elapsedTime - lastLaneChangeTime > laneChangeHoldDelay) {
+                 // Continuous movement logic
+                 if (elapsedTime - lastLaneChangeTime - laneChangeHoldDelay >= laneChangeInterval) {
+                     targetLaneIndex = Math.min(lanePositions.length - 1, targetLaneIndex + 1);
+                     lastLaneChangeTime = elapsedTime - laneChangeHoldDelay; // Reset interval timer
+                     //console.log("Continuous Right: Target Lane:", targetLaneIndex); // Debug
+                 }
+            } else if (car && Math.abs(car.position.x - lanePositions[targetLaneIndex]) < 0.1) { // Check if car is loaded
+                 // Initial press before hold delay - move one lane if currently close to target
+                 targetLaneIndex = Math.min(lanePositions.length - 1, targetLaneIndex + 1);
+                 lastLaneChangeTime = elapsedTime; // Reset timer for hold
+                 //console.log("Initial Right: Target Lane:", targetLaneIndex); // Debug
+            }
+        }
+
+        const targetX = lanePositions[targetLaneIndex];
+        const moveFactor = Math.min(1.0, laneChangeSpeed * deltaTime); // Interpolation factor
+        // Note: Tilt control logic is currently removed, so tiltFactor is not used here.
+
+
+        // Smoothly move car towards target X, only if car is loaded
+        if (car) {
+             car.position.x = THREE.MathUtils.lerp(car.position.x, targetX, moveFactor);
+
+             // Clamp car's final position to the road edges (-2.5 to 2.5 for car center)
+             // Note: Car width is 1, Road width is 6 (-3 to +3). Clamping center to -2.5/+2.5 means edges are at -3/+3.
+              car.position.x = THREE.MathUtils.clamp(car.position.x, -(roadWidth/2 - 0.5), (roadWidth/2 - 0.5));
+        }
+
+
+        // Play lane change sound if target lane changed
+        if (targetLaneIndex !== previousTargetLaneIndex) {
+             laneChangeSound.currentTime = 0; // Rewind sound if it's already playing
+             laneChangeSound.play().catch(e => console.error("Error playing lane change sound:", e));
+             previousTargetLaneIndex = targetLaneIndex; // Update previous target lane
+        }
+
+
+        // Calculate target tilt based on direction of movement (using target vs current lane)
+        let targetTiltRotationZ = 0;
+        // Update currentLaneIndex when close enough to target X
+        const laneSnapThreshold = 0.05; // How close to snap to lane center
+         if (car && Math.abs(car.position.x - targetX) < laneSnapThreshold) { // Check if car is loaded
+             // Only snap and update currentLaneIndex if we are actually targeting that lane center
+             if (Math.abs(car.position.x - lanePositions[targetLaneIndex]) < laneSnapThreshold + 0.01) { // Add a small buffer for snapping
+                 car.position.x = lanePositions[targetLaneIndex]; // Snap to center
+                 currentLaneIndex = targetLaneIndex; // Update current lane
+             }
+         }
+
+
+        if (targetLaneIndex < currentLaneIndex) { // Moving Left
+             targetTiltRotationZ = maxTilt;
+        } else if (targetLaneIndex > currentLaneIndex) { // Moving Right
+             targetTiltRotationZ = -maxTilt;
+        } else {
+             targetTiltRotationZ = 0; // No tilt when settled in a lane
+        }
+
+
+        // Smoothly interpolate car rotation towards target tilt, only if car is loaded
+        if (car) {
+            // Note: Tilt control logic is currently removed, using the old maxTilt for rotation effect.
+            // If you re-add tilt controls, you'll need to adjust this rotation logic.
+            car.rotation.z = THREE.MathUtils.lerp(car.rotation.z, targetTiltRotationZ, tiltSpeed * deltaTime); // Using tiltSpeed here for rotation effect
+        }
+
+
+        // --- TILE MANAGEMENT (Refined Logic) ---
+        const tileResetThreshold = camera.position.z + segmentLength / 2;
+
+        // --- Manage Road Segments ---
+        try {
+            let furthestRoadSegment = roadSegments[0];
+            for (let i = 1; i < roadSegments.length; i++) {
+                if (roadSegments[i].position.z < furthestRoadSegment.position.z) {
+                    furthestRoadSegment = roadSegments[i];
+                }
+            }
+            roadSegments.forEach(segment => {
+                if (segment.position.z > tileResetThreshold) {
+                    segment.position.z = furthestRoadSegment.position.z - segmentLength;
+                    furthestRoadSegment = segment;
+                   // console.log("Moved road segment to Z:", segment.position.z);
+                }
+            });
+        } catch (e) {
+            console.error("Error managing road tiles:", e);
+            gameRunning = false; // Stop game on error
+        }
+
+        // --- Manage Left Sea Segments ---
+        try {
+            let furthestSeaLeftSegment = seaSegmentsLeft[0];
+            for (let i = 1; i < seaSegmentsLeft.length; i++) {
+                if (seaSegmentsLeft[i].position.z < furthestSeaLeftSegment.position.z) {
+                    furthestSeaLeftSegment = seaSegmentsLeft[i];
+                }
+            }
+            seaSegmentsLeft.forEach(segment => {
+                if (segment.position.z > tileResetThreshold) {
+                    segment.position.z = furthestSeaLeftSegment.position.z - segmentLength;
+                    furthestSeaLeftSegment = segment;
+                    // console.log("Moved sea left segment to Z:", segment.position.z);
+                }
+            });
+        } catch (e) {
+            console.error("Error managing left sea tiles:", e);
+            gameRunning = false;
+        }
+
+        // --- Manage Right Sea Segments ---
+        try {
+            let furthestSeaRightSegment = seaSegmentsRight[0];
+            for (let i = 1; i < seaSegmentsRight.length; i++) {
+                if (seaSegmentsRight[i].position.z < furthestSeaRightSegment.position.z) {
+                    furthestSeaRightSegment = seaSegmentsRight[i];
+                }
+            }
+            seaSegmentsRight.forEach(segment => {
+                if (segment.position.z > tileResetThreshold) {
+                    segment.position.z = furthestSeaRightSegment.position.z - segmentLength;
+                    furthestSeaRightSegment = segment;
+                   // console.log("Moved sea right segment to Z:", segment.position.z);
+                }
+            });
+        } catch (e) {
+            console.error("Error managing right sea tiles:", e);
+            gameRunning = false;
+        }
+
+
+        // --- Calculate Furthest Zs for other elements ---
+        let furthestObsZ = 0; let furthestStripeZ = 0; let furthestBoatZ = 0;
+         // Only calculate if elements exist
+        if (obstacles.length > 0) { try { furthestObsZ = Math.min(...obstacles.map(o => o.position.z)); } catch(e) {console.error("Error finding furthest obstacle Z:", e);} }
+        if (stripes.length > 0) { try { furthestStripeZ = Math.min(...stripes.map(s => s.position.z)); } catch(e) {console.error("Error finding furthest stripe Z:", e);} }
+        if (boats.length > 0) { try { furthestBoatZ = Math.min(...boats.map(b => b.position.z)); } catch(e) {console.error("Error finding furthest boat Z:", e);} }
+
+
+        const resetMargin = 10;
+
+        // Reset Stripes
+        stripes.forEach(stripe => {
+            if (stripe.position.z > camera.position.z + resetMargin) {
+                stripe.position.z = furthestStripeZ - stripeSpacing;
+                // Recalculate furthest after resetting one
+                 if (stripes.length > 0) furthestStripeZ = Math.min(...stripes.map(s => s.position.z));
+            }
+        });
+
+        // Reset Boats
+        boats.forEach(boat => {
+            if (boat.position.z > camera.position.z + resetMargin + 10) {
+                 const sideX = boat.position.x < 0 ? -(roadWidth / 2 + 3 + Math.random() * 4) : (roadWidth / 2 + 3 + Math.random() * 4);
+                 boat.position.z = furthestBoatZ - boatSpacing - Math.random() * 10;
+                 boat.position.x = sideX;
+                 // Recalculate furthest after resetting one
+                  if (boats.length > 0) furthestBoatZ = Math.min(...boats.map(o => o.position.z)); // Corrected to boats
+            }
+        });
+
+
+        // --- Obstacle Collision and Reset Logic ---
+         // Update carBox only if car is loaded
+         if (car) { carBox.setFromObject(car); }
+
+         obstacles.forEach(obs => {
+             // Only check collision if car is loaded
+             if (car) {
+                  const distZ = obs.position.z - car.position.z;
+                   if (distZ < 10 && distZ > -minGap) { // Broad-phase Z check
+                        if (!isInvulnerable) {
+                            obsBox.setFromObject(obs);
+                            if (carBox.intersectsBox(obsBox)) {
+                                crashSound.play(); lives--; isInvulnerable = true; invulnerabilityTimer = INVULNERABILITY_DURATION;
+                                // Handle transparency for the loaded model - needs to traverse its meshes
+                                car.traverse((node) => {
+                                    if (node.isMesh && node.material) {
+                                         // Make sure material supports transparency (most Phong/Standard/Physical do)
+                                        // Clone material first if you don't want to affect other instances
+                                        // node.material = node.material.clone(); // Example of cloning
+                                        node.material.transparent = true;
+                                        node.material.opacity = 0.5;
+                                    }
+                                });
+
+
+                                updateScoreIfNeeded();
+                                if (lives <= 0) {
+                                    if (score > highScore) { highScore = score; localStorage.setItem("highScore", highScore); }
+                                    gameRunning = false; showGameOver(); return; // Exit animate loop
+                                }
+                                // Reposition the hit obstacle far ahead relative to the car
+                                obs.position.set(
+                                    lanePositions[Math.floor(Math.random() * lanePositions.length)], obs.position.y,
+                                    car.position.z - 40 - initialObstacleCount * minGap - Math.random() * 30 // Place it further ahead
+                                );
+                                // Re-calculate furthestObsZ after repositioning
+                                 if (obstacles.length > 0) furthestObsZ = Math.min(...obstacles.map(o => o.position.z));
+                            }
+                        }
+                   }
+             }
+
+             // Reset passed obstacle (works even if car is not loaded yet, based on camera position)
+             if (obs.position.z > camera.position.z + resetMargin) { // Reset passed obstacle
+                   if (gameRunning && !paused) { passSound.currentTime = 0; passSound.play().catch(e => {}); }
+                   // Reposition the passed obstacle far ahead relative to the camera
+                   obs.position.set(
+                      lanePositions[Math.floor(Math.random() * lanePositions.length)], obs.position.y,
+                      camera.position.z - 40 - initialObstacleCount * minGap - Math.random() * 30 // Place it further ahead
+                    );
+                   // Re-calculate furthestObsZ after repositioning
+                    if (obstacles.length > 0) furthestObsZ = Math.min(...obstacles.map(o => o.position.z));
+
+                  score += 10; updateScoreIfNeeded();
+                  if (score > 0 && score % 300 === 0) showMilestone();
+             }
+         });
+
+
+        // --- Render ---
+        renderer.render(scene, camera);
+    }
+    // =========================================================================
+    // === END OF ANIMATE FUNCTION ===
+    // =========================================================================
+
+    function updateScore() { updateScoreIfNeeded(); }
+
+    function showMilestone() {
+      const milestone = document.getElementById("milestone");
+      milestone.textContent = `Milestone! ${score} Points!\nSpeed Up!`; // Added newline for better display
+      milestone.style.display = "block"; setTimeout(() => milestone.style.display = "none", 1500);
+    }
+
+    function showGameOver() {
+      gameRunning = false;
+      const screen = document.getElementById("gameOverScreen");
+      document.getElementById("gameOverText").textContent = `Game Over!\nFinal Score: ${score}`; // Added newline
+      screen.classList.add('visible'); // Use class for transition
+      paused = false; document.getElementById("pauseBtn").innerText = "Pause";
+      document.getElementById("countdown").style.display = "none";
+      updateScoreIfNeeded();
+      // Stop background music on game over
+      if (bgMusic) bgMusic.pause();
+       // Note: Tilt control disable logic is handled by settings menu configuration.
+       // Show button controls again (if they were hidden by tilt)
+       // setControlUIVisibility(true); // This logic should be part of the settings/reset flow if settings are implemented
+    }
+
+    function resetGame() {
+        console.log("Resetting Game..."); // <<< DEBUG LOG
+        document.getElementById("gameOverScreen").classList.remove('visible'); // Hide game over screen
+
+        if (score > highScore) { highScore = score; localStorage.setItem("highScore", highScore); }
+
+        score = 0; lives = 3; gameRunning = true; paused = false; waitingToResume = false;
+        // Reset lane indices and invulnerability
+        currentLaneIndex = 2;
+        targetLaneIndex = 2;
+        previousTargetLaneIndex = 2; // Reset previous target lane
+        isInvulnerable = false; invulnerabilityTimer = 0;
+        moveLeftPressed = false; // Reset input states
+        moveRightPressed = false;
+        lastLaneChangeTime = 0;
+
+        // Reset car position and rotation if loaded
+        if (car) {
+             car.position.set(lanePositions[currentLaneIndex], 0.5, 5); // Reset car X based on initial lane
+             car.rotation.z = 0; // Reset car tilt (lateral tilt)
+             // Reset material transparency/opacity if car is loaded
+             car.traverse((node) => {
+                 if (node.isMesh && node.material) {
+                     node.material.opacity = 1.0;
+                     node.material.transparent = false;
+                 }
+             });
+             // Note: The initial forward rotation (rotation.y) is set in the loader callback
+             // If you need to reset that, you'd do it here too.
+             // car.rotation.y = Math.PI; // Example if initial rotation was Math.PI
+        }
+
+
+        camera.position.set(0, 5, 10); camera.lookAt(0, 0, 0);
+        light.position.set(10, 20, 20); light.target.position.set(0, 0, 0);
+
+        // --- RESET TILES ---
+        roadSegments.forEach((segment, i) => { segment.position.z = 5 - (segmentLength / 2) - (i * segmentLength); });
+        seaSegmentsLeft.forEach((segment, i) => { segment.position.z = 5 - (segmentLength / 2) - (i * segmentLength); });
+        seaSegmentsRight.forEach((segment, i) => { segment.position.z = 5 - (segmentLength / 2) - (i * segmentLength); });
+
+        // Reset Obstacles (position relative to where car *will* be or camera if car not loaded)
+        obstacles.forEach((obs, i) => {
+           const resetZ = (car ? car.position.z : camera.position.z) - 40 - i * minGap; // Position relative to car if loaded, otherwise camera
+           obs.position.set( lanePositions[Math.floor(Math.random() * lanePositions.length)], obs.position.y, resetZ );
+        });
+        // Reset Stripes
+        stripes.forEach((stripe, i) => { stripe.position.z = -i * stripeSpacing; });
+        // Reset Boats
+        let currentFurthestBoatZ = -20;
+        boats.forEach((boat, i) => {
+            const sideIndex = Math.floor(i / numBoatsPerSide);
+            const zPos = -sideIndex * boatSpacing - 20 - (i % numBoatsPerSide) * 5;
+            const sideX = (boat.position.x < 0) ? -(roadWidth / 2 + 3 + Math.random() * 4) : (roadWidth / 2 + 3 + Math.random() * 4);
+            boat.position.set(sideX, 0, zPos); currentFurthestBoatZ = Math.min(currentFurthestBoatZ, zPos);
+        });
+
+
+        lastScore = -1; lastLives = -1; updateScoreIfNeeded();
+
+        document.getElementById("countdown").style.display = "none";
+        document.getElementById("pauseBtn").innerText = "Pause";
+
+        clock.getDelta(); // Clear clock delta
+
+        // Start animation loop only if game was properly started via button
+        if (gameStarted) {
+            console.log("Reset finished. Calling animate()..."); // <<< DEBUG LOG
+            // Start background music
+            if (bgMusic) {
+                bgMusic.currentTime = 0; // Rewind to start
+                bgMusic.play().catch(e => console.error("Error playing background music:", e));
+            }
+            // Note: Control configuration (buttons vs tilt) is handled by the settings menu logic.
+            // If you re-add the settings menu, uncomment the call to configureControls() here.
+            // configureControls();
+
+            animate(); // Explicitly restart animation loop
+        } else {
+             // If game hasn't started (e.g., first load), just render the initial scene (shows background, road, etc.)
+             // This is important so you see the scene even before starting the game.
+             renderer.render(scene, camera);
+        }
+    }
+
+
+    let waitingToResume = false;
+    function pauseGame() {
+        if (!gameStarted || (!gameRunning && !paused && !waitingToResume)) return; // Prevent pausing if game isn't started or already paused/resuming
+
+        const countdownEl = document.getElementById("countdown"); const pauseBtn = document.getElementById("pauseBtn");
+        if (!paused) { // PAUSING
+            paused = true; gameRunning = false; pauseSound.play();
+            pauseBtn.innerText = "Resume"; countdownEl.innerText = "Paused"; countdownEl.style.display = "block";
+            clock.stop();
+            // Reset button states when paused to prevent unwanted movement on resume
+            moveLeftPressed = false;
+            moveRightPressed = false;
+             // Pause background music
+            if (bgMusic) bgMusic.pause();
+             // Note: Tilt control pause/resume logic is handled by the settings menu configuration.
+            // If you re-add the settings menu, ensure tilt listener is removed here if currentControlMethod is 'tilt'.
+        } else { // RESUMING
+             // Check if already in resume countdown
+            if (waitingToResume) return;
+
+            pauseBtn.innerText = "Pause"; countdownEl.style.display = "block"; pauseSound.play();
+            resumeGameCountdown(3);
+            // Resume background music after countdown
+             if (bgMusic) bgMusic.play().catch(e => console.error("Error resuming background music:", e)); // Play immediately, but might need to wait for countdown end
+        }
+    }
+
+    function resumeGameCountdown(seconds) {
+      const countdownEl = document.getElementById("countdown"); countdownEl.innerText = seconds; waitingToResume = true;
+      // Pause background music during countdown if it started playing immediately on resume click
+      if (bgMusic && !bgMusic.paused) bgMusic.pause();
+
+      const interval = setInterval(() => {
+        seconds--;
+        if (seconds > 0) { countdownEl.innerText = seconds; pauseSound.play(); }
+        else {
+          clearInterval(interval); countdownEl.style.display = "none"; paused = false; gameRunning = true; waitingToResume = false;
+          clock.start(); clock.getDelta(); pauseSound.play();
+          lastLaneChangeTime = clock.getElapsedTime(); // Reset timer on resume
+          // Note: Tilt control resume logic is handled by the settings menu configuration.
+          // If you re-add the settings menu, ensure tilt listener is re-added here if currentControlMethod is 'tilt'.
+          animate(); // Explicitly restart animation loop
+        }
+      }, 1000);
+    }
+
+     // NOTE: The functions related to the settings menu and tilt controls (configureControls,
+     // setControlUIVisibility, enableTiltControls, disableTiltControls, addDeviceOrientationListener,
+     // handleDeviceOrientation, showSettings, hideSettings, saveSettings, mapRange)
+     // were removed in the code snippet you provided. If you want the settings menu and
+     // tilt controls back, you need to re-add that HTML and JavaScript code.
+
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      console.log("Start button clicked. gameStarted:", gameStarted); // <<< DEBUG LOG
+      document.getElementById("startMenu").style.display = "none";
+      if (!gameStarted) {
+        gameStarted = true; // Set flag FIRST
+        console.log("Setting gameStarted=true, calling resetGame..."); // <<< DEBUG LOG
+        // Play game start sound
+        if (gameStartSound) {
+            gameStartSound.currentTime = 0; // Rewind to start
+            gameStartSound.play().catch(e => console.error("Error playing game start sound:", e));
+        }
+        resetGame(); // This will call animate() if gameStarted is true
+      } else {
+        // Handle case where game was already started (e.g., after game over, click start again)
+        console.log("Game already started, handling restart/resume..."); // <<< DEBUG LOG
+        if (paused) { // If paused, resume
+            pauseGame(); // This handles the countdown and resuming
+        } else if (!gameRunning) { // If game over (not running, not paused), reset
+            resetGame();
+        }
+        // If running, do nothing (already playing)
+      }
+    });
+
+
+    // --- Initialize ---
+    init();
+    updateScoreIfNeeded(); // Initial score display
+
+    // Start rendering loop immediately to show the scene while model loads
+    // If the game hasn't started, animate() will only render.
+    animate();
+
+  </script>
+</body>
+</html>
